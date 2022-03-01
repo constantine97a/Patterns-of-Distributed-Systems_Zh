@@ -1,1 +1,1 @@
-# Patterns-of-Distributed-Systems_Zh
+# Patterns-of-Distributed-Systems-zh_CN
