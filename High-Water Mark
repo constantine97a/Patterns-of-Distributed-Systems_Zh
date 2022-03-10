@@ -1,0 +1,139 @@
+# High-Water Mark
+
+预写日志中显示上次成功复制的索引。
+
+[TOC]
+
+## 问题
+
+​		预写日志模式用于在服务器崩溃和重新启动后恢复状态。但是预写日志不足以在服务器故障的情况下提供可用性。如果单个服务器发生故障，则客户端将无法
+
+运行，直到服务器重新启动。为了获得更可用的系统，我们可以在多台服务器上复制日志。使用领导者和追随者，领导者将其所有日志条目复制到追随者的法定人数。现在如果领导者失败，可以选举一个新的领导者，客户端可以像以前一样继续使用集群。但是仍然有几件事可能出错：
+
+​		领导者在将其日志条目发送给任何追随者之前可能会失败。领导者在向某些追随者发送日志条目后可能会失败，但无法将其发送给大多数追随者。
+在这些错误场景中，一些关注者的日志中可能缺少条目，而一些关注者的条目可能比其他关注者多。因此，对于每个追随者来说，了解日志的哪一部分可以安全地提供给客户端变得很重要。
+
+## 解决方案
+
+​	高水位标记是日志文件的索引，记录已知已成功复制到 Quorum of follower 的最后一个日志条目。领导者还在复制期间将高水位标记传递给其追随者。集群中的所有服务器应该只将数据传输到反映低于高水位线的更新的客户端。
+
+这是操作的顺序。
+
+![img](.\images\highwatermark-sequence.png)
+
+对于每个日志条目，领导者将其附加到其本地预写日志中，然后将其发送给所有追随者。
+
+leader (class ReplicatedLog...)
+
+```java
+  private Long appendAndReplicate(byte[] data) {
+      Long lastLogEntryIndex = appendToLocalLog(data);
+      replicateOnFollowers(lastLogEntryIndex);
+      return lastLogEntryIndex;
+  }
+
+
+  private void replicateOnFollowers(Long entryAtIndex) {
+      for (final FollowerHandler follower : followers) {
+          replicateOn(follower, entryAtIndex); //send replication requests to followers
+      }
+  }
+```
+
+​	追随者处理复制请求并将日志条目附加到其本地日志中。 在成功附加日志条目后，它们会以他们拥有的最新日志条目的索引来响应领导者。 该响应还包括服务器的当前的生成时钟[Generation Clock]()。
+
+​	当收到响应时，Leader 会跟踪在每个服务器上复制的日志索引。
+
+*class ReplicatedLog…*
+
+```java
+  logger.info("Updating matchIndex for " + response.getServerId() + " to " + response.getReplicatedLogIndex());
+  updateMatchingLogIndex(response.getServerId(), response.getReplicatedLogIndex());
+  var logIndexAtQuorum = computeHighwaterMark(logIndexesAtAllServers(), config.numberOfServers());
+  var currentHighWaterMark = replicationState.getHighWaterMark();
+  if (logIndexAtQuorum > currentHighWaterMark && logIndexAtQuorum != 0) {
+      applyLogEntries(currentHighWaterMark, logIndexAtQuorum);
+      replicationState.setHighWaterMark(logIndexAtQuorum);
+  }
+```
+
+高水位线可以通过查看所有追随者的日志索引和领导者自身的日志来计算，并选择大多数服务器上可用的索引。
+
+class ReplicatedLog…
+
+```java
+  Long computeHighwaterMark(List<Long> serverLogIndexes, int noOfServers) {
+      serverLogIndexes.sort(Long::compareTo);
+      return serverLogIndexes.get(noOfServers / 2);
+  }
+```
+
+​	领导者将高水位标记作为常规 *HeartBeat* 的一部分或作为单独的请求传播给追随者。 然后，追随者相应地设置了他们的高水位线。
+
+​	任何客户端只能在高水位线之前读取日志条目。 超出高水位线的日志条目对客户端不可见，因为没有确认条目已复制，因此如果领导者失败，并且某些其他服务器被选为领导者，它们可能不可用。
+
+class ReplicatedLog…
+
+```java
+  public WALEntry readEntry(long index) {
+      if (index > replicationState.getHighWaterMark()) {
+          throw new IllegalArgumentException("Log entry not available");
+      }
+      return wal.readAt(index);
+  }
+```
+
+## 日志截断
+
+​		当服务器在崩溃/重启后加入集群时，它的日志中总是有可能出现一些冲突的条目。 因此，每当服务器加入集群时，它都会与集群的领导者进行检查，以了解日志中的哪些条目可能存在冲突。 然后它将日志截断到条目与领导者匹配的点，然后使用后续条目更新日志以确保其日志与集群的其余部分匹配。
+
+​		考虑以下示例。 客户端发送请求以在日志中添加四个条目。 领导者成功复制了三个条目，但在将条目 4 添加到自己的日志后失败。 其中一个追随者被选为新的领导者，并接受来自客户端的更多条目。 当失败的leader再次加入集群时，它的entry4是冲突的。 因此它需要将其日志截断到 entry3，然后添加 entry5 以将日志与集群的其余部分匹配。
+
+```
+领导选举可能会出现一个微妙的问题。 在任何服务器向客户端发送数据之前，我们必须确保集群中的所有服务器都有最新的日志。
+在现有领导者在将高水位标记传播给所有追随者之前失败的情况下存在一个微妙的问题。 RAFT 通过在成功的领导者选举后向领导者的日志附加一个无操作条目来做到这一点，并且只有在其追随者确认后才为客户端提供服务。 在 ZAB 中，新领导者在开始为客户服务之前明确尝试将其所有条目推送给所有追随者。
+```
+
+
+
+![img](.\images\leaderfailure.png)
+
+Figure 2: Leader Failure
+
+![img](D:\workspace\patterns-of-distributed-system-zh_CN\images\newleader.png)
+
+​		任何在暂停后重新启动或重新加入集群的服务器都会找到新的领导者。 然后它显式地请求当前的高水位标记，将其日志截断为高水位标记，然后从领导者那里获取所有超出高水位标记的条目。 像 RAFT 这样的复制算法可以通过检查自己日志中的日志条目与请求中的日志条目来找出冲突的条目。 具有相同日志索引但位于较低[Generation Clock]() 的条目将被删除。
+
+class ReplicatedLog…
+
+```
+  void maybeTruncate(ReplicationRequest replicationRequest) {
+      replicationRequest.getEntries().stream()
+              .filter(entry -> wal.getLastLogIndex() >= entry.getEntryIndex() &&
+              entry.getGeneration() != wal.readAt(entry.getEntryIndex()).getGeneration())
+              .forEach(entry -> wal.truncate(entry.getEntryIndex()));
+  }
+```
+
+支持日志截断的一个简单实现是保留日志索引和文件位置的映射。 然后可以在给定索引处截断日志，如下所示：
+
+class WALSegment…
+
+```
+  public synchronized void truncate(Long logIndex) throws IOException {
+      var filePosition = entryOffsets.get(logIndex);
+      if (filePosition == null) throw new IllegalArgumentException("No file position available for logIndex=" + logIndex);
+      fileChannel.truncate(filePosition);
+      truncateIndex(logIndex);
+  }
+
+  private void truncateIndex(Long logIndex) {
+      entryOffsets.entrySet().removeIf(entry -> entry.getKey() >= logIndex);
+  }
+```
+
+## 例子
+
+- 所有共识算法都使用高水位线的概念来知道何时应用提议的状态突变。 例如 在 [RAFT](https://raft.github.io/) 共识算法中，高水位线称为 'CommitIndex'。
+- 在 [Kafka 复制协议](https://www.confluent.io/blog/hands-free-kafka-replication-a-lesson-in-operational-simplicity/) 中，维护了一个单独的索引，称为 'high- watermark”。 消费者只能在高水位线之前看到条目。
+- [Apache BookKeeper](https://bookkeeper.apache.org/) 有一个 '[最后添加确认](https://bookkeeper.apache.org/archives/docs/r4.4.0/bookkeeperProtocol.html) 的概念 '，这是在法定人数上成功复制的条目。
