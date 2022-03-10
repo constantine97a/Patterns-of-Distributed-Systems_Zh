@@ -24,7 +24,7 @@
 
 ​	class WALEntry…
 
-```
+```java
   private final Long entryIndex;
   private final byte[] data;
   private final EntryType entryType;

@@ -14,7 +14,7 @@
 
 ​		每个键值都与一个版本向量相关联，该版本向量为每个集群节点维护一个数字。本质上，版本向量是一组计数器，每个节点一个。 三个节点（蓝色、绿色、黑色）的版本向量看起来像 [blue: 43, green: 54, black: 12]。 每次节点有内部更新时，它都会更新自己的计数器，因此绿色节点中的更新会将向量更改为 [blue: 43, green: 55, black: 12]。 每当两个节点通信时，它们都会同步它们的向量标记，从而使它们能够检测到任何同时更新。
 
-```
+```asciiarmor
 与矢量时钟的区别
 [vector-clock] 实现类似。 但是矢量时钟用于跟踪服务器上发生的每个事件。 相比之下，版本向量用于检测一组副本中对同一键的并发更新。 因此，版本向量的实例是按键存储的，而不是按服务器存储的。 像 [riak] 这样的数据库使用术语版本向量而不是向量时钟来实现它们。 有关详细信息，请参阅 [version-vectors-are-not-vector-clocks]。
 ```
@@ -52,7 +52,7 @@ Note： 是一个值对象，所以每次修改值都需要返回新的对象
 
 存储在服务器上的每个值都与一个版本向量相关联
 
-```
+```java
 class VersionedValue…
 
   public class VersionedValue {
@@ -97,7 +97,7 @@ class VersionedValue…
 
 比较实现如下：
 
-```
+```java
 public enum Ordering {
     Before,
     After,
@@ -107,7 +107,7 @@ public enum Ordering {
 
 class VersionVector…
 
-```
+```java
   //This is exact code for Voldermort implementation of VectorClock comparison.
   //https://github.com/voldemort/voldemort/blob/master/src/java/voldemort/versioning/VectorClockUtils.java
   public static Ordering compare(VersionVector v1, VersionVector v2) {
@@ -188,7 +188,7 @@ class VersionVector…
 
 class ClusterClient…
 
-```
+```java
   public void put(String key, String value, VersionVector existingVersion) {
       List<Integer> allReplicas = findReplicas(key);
       int nodeIndex = 0;
@@ -222,7 +222,7 @@ class ClusterClient…
 
 作为主节点的节点是增加版本号的节点。
 
-```
+```java
 public VersionedValue putAsPrimary(String key, String value, VersionVector existingVersion) {
     VersionVector newVersion = existingVersion.increment(nodeId);
     VersionedValue versionedValue = new VersionedValue(value, newVersion);
@@ -245,7 +245,7 @@ public void put(String key, VersionedValue value) {
 
 class VersionVectorKVStore…
 
-```
+```java
   public void put(String key, VersionedValue newValue) {
       List<VersionedValue> existingValues = kv.get(key);
       if (existingValues == null) {
@@ -288,7 +288,7 @@ class VersionVectorKVStore…
 
 class ClusterClient…
 
-```
+```java
   public List<VersionedValue> get(String key) {
       List<Integer> allReplicas = findReplicas(key);
 
@@ -337,7 +337,7 @@ class ClusterClient…
 
 ### Last Write Wins (LWW) Conflict Resolution
 
-```
+```asciiarmor
 Cassandra和 LWW
 [cassandra] 虽然在架构上与 [riak] 或 [voldemort] 相同，但根本不使用版本向量，并且仅支持最后写入获胜冲突解决策略。 Casasndra 是一个列族数据库，而不是一个简单的键值存储，它存储每列的时间戳，而不是一个整体的值。 虽然这将解决冲突的负担从用户身上移开，但用户需要确保 [ntp] 服务已配置并跨 cassandra 节点正常工作。 在最坏的情况下，由于时钟漂移，一些最新值可能会被旧值覆盖。
 ```
@@ -348,7 +348,7 @@ Cassandra和 LWW
 
 class TimestampedVersionedValue…
 
-```
+```java
   class TimestampedVersionedValue {
       String value;
       VersionVector versionVector;
@@ -365,7 +365,7 @@ class TimestampedVersionedValue…
 
 class ClusterClient…
 
-```
+```java
   public Optional<TimestampedVersionedValue> getWithLWWW(List<TimestampedVersionedValue> values) {
       return values.stream().max(Comparator.comparingLong(v -> v.timestamp));
   }
@@ -403,7 +403,7 @@ class ClusterClient…
 
 class ClusterClient…
 
-```
+```java
   private VersionedValue putWithClientId(String clientId, int nodeIndex, String key, String value, VersionVector version) {
       ClusterNode node = clusterNodes.get(nodeIndex);
       VersionVector newVersion = version.increment(clientId);

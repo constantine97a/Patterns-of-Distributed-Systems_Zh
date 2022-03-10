@@ -80,7 +80,7 @@ class HybridTimestamp…
 
 class Server…
 
-```
+```java
   HybridClockMVCCStore mvccStore;
   HybridClock clock;
 
@@ -110,7 +110,7 @@ class HybridClock…
 
 class Server…
 
-```
+```java
   public HybridTimestamp write(String key, String value, HybridTimestamp requestTimestamp) {
       //update own clock to reflect causality
       HybridTimestamp writeAtTimestamp = clock.tick(requestTimestamp);
@@ -121,7 +121,7 @@ class Server…
 
 class HybridClock…
 
-```
+```java
   public synchronized HybridTimestamp tick(HybridTimestamp requestTime) {
       long nowMillis = systemClock.now();
       //set ticks to -1, so that, if this is the max, the next addTicks reset it to zero.
@@ -146,7 +146,7 @@ class HybridClock…
 
 class Client…
 
-```
+```java
   HybridClock clock = new HybridClock(new SystemClock());
   public void write() {
       HybridTimestamp server1WrittenAt = server1.write("name", "Alice", clock.now());
@@ -166,7 +166,7 @@ class Client…
 
 class HybridClockReplicatedKVStore…
 
-```
+```java
   private Response applySetValueCommand(VersionedSetValueCommand setValueCommand) {
       mvccStore.put(setValueCommand.getKey(), setValueCommand.timestamp, setValueCommand.value);
       Response response = Response.success(setValueCommand.timestamp);
@@ -176,7 +176,7 @@ class HybridClockReplicatedKVStore…
 
 class HybridClockMVCCStore…
 
-```
+```java
   ConcurrentSkipListMap<HybridClockKey, String> kv = new ConcurrentSkipListMap<>();
 
   public void put(String key, HybridTimestamp version, String value) {
@@ -186,7 +186,7 @@ class HybridClockMVCCStore…
 
 class HybridClockKey…
 
-```
+```java
   public class HybridClockKey implements Comparable<HybridClockKey> {
       private String key;
       private HybridTimestamp version;

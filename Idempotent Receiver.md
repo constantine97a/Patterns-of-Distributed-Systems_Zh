@@ -35,7 +35,7 @@
 
 **class ReplicatedKVStore…**
 
-```
+```java
   private Map<Long, Session> clientSessions = new ConcurrentHashMap<>();
 
   private RegisterClientResponse registerClient(WALEntry walEntry) {

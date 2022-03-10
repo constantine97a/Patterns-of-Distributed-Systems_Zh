@@ -6,19 +6,19 @@
 
 ## 问题
 
-​		如果请求需要等待响应以返回先前请求的响应，则使用单套接字通道在集群内的服务器之间进行通信可能会导致性能问题。 为了获得更好的吞吐量和延迟，服务器上的请求队列应该被填满，以确保服务器容量得到充分利用。 例如，当在服务器中使用单一更新队列时，它总是可以接受更多请求，直到队列填满，同时它正在处理请求。 如果一次只发送一个请求，则大部分服务器容量都被不必要地浪费了。
+如果请求需要等待响应以返回先前请求的响应，则使用单套接字通道在集群内的服务器之间进行通信可能会导致性能问题。 为了获得更好的吞吐量和延迟，服务器上的请求队列应该被填满，以确保服务器容量得到充分利用。 例如，当在服务器中使用单一更新队列时，它总是可以接受更多请求，直到队列填满，同时它正在处理请求。 如果一次只发送一个请求，则大部分服务器容量都被不必要地浪费了。
 
 
 
 ## 解决方案
 
-​		节点向其他节点发送请求，而无需等待先前请求的响应。 这是通过创建两个单独的线程来实现的，一个用于通过网络通道发送请求，另一个用于从网络通道接收响应。
+节点向其他节点发送请求，而无需等待先前请求的响应。 这是通过创建两个单独的线程来实现的，一个用于通过网络通道发送请求，另一个用于从网络通道接收响应。
 
 ![img](images/single-socket-channel.png)
 
 class SingleSocketChannel…
 
-```
+```java
   public void sendOneWay(RequestOrResponse request) throws IOException {
       var dataStream = new DataOutputStream(socketOutputStream);
       byte[] messageBytes = serialize(request);
@@ -31,7 +31,7 @@ class SingleSocketChannel…
 
 class ResponseThread…
 
-```
+```java
   class ResponseThread extends Thread implements Logging {
       private volatile boolean isRunning = false;
       private SingleSocketChannel socketChannel;
@@ -70,7 +70,7 @@ class ResponseThread…
 
 class RequestLimitingPipelinedConnection…
 
-```
+```java
   private final Map<InetAddressAndPort, ArrayBlockingQueue<RequestOrResponse>> inflightRequests = new ConcurrentHashMap<>();
   private int maxInflightRequests = 5;
   public void send(InetAddressAndPort to, RequestOrResponse request) throws InterruptedException {
@@ -86,7 +86,7 @@ class RequestLimitingPipelinedConnection…
 
 class RequestLimitingPipelinedConnection…
 
-```
+```java
   private void consume(SocketRequestOrResponse response) {
       Integer correlationId = response.getRequest().getCorrelationId();
       Queue<RequestOrResponse> requestsForAddress = inflightRequests.get(response.getAddress());

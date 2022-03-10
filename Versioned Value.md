@@ -53,7 +53,7 @@ class ReplicatedKVStore…
 
 class MVCCStore…
 
-```
+```java
   public class MVCCStore {
       NavigableMap<VersionedKey, String> kv = new ConcurrentSkipListMap<>();
   
@@ -66,7 +66,7 @@ class MVCCStore…
 
 class VersionedKey…
 
-```
+```java
   public class VersionedKey implements Comparable<VersionedKey> {
       private String key;
       private long version;
@@ -99,7 +99,7 @@ class VersionedKey…
 
 class MVCCStore…
 
-```
+```java
   public Optional<String> get(final String key, final int readAt) {
       Map.Entry<VersionedKey, String> entry = kv.floorEntry(new VersionedKey(key, readAt));
       return (entry == null)? Optional.empty(): Optional.of(entry.getValue());
@@ -128,7 +128,7 @@ class MVCCStore…
 
 class IndexedMVCCStore…
 
-```
+```java
   public class IndexedMVCCStore {
       NavigableMap<String, List<Integer>> keyVersionIndex = new TreeMap<>();
       NavigableMap<VersionedKey, String> kv = new TreeMap<>();
@@ -170,7 +170,7 @@ class IndexedMVCCStore…
 
 class IndexedMVCCStore…
 
-```
+```java
   public List<String> getRange(String key, final int fromRevision, int toRevision) {
       rwLock.readLock().lock();
       try {

@@ -320,7 +320,7 @@ class Acceptor…
 
 class Acceptor…
 
-```
+```java
   public void commit(MonotonicId generation, Command value) {
       committedGeneration = Optional.of(generation);
       committedValue = Optional.of(value);

@@ -20,7 +20,7 @@
 
 ​		定期向所有其他服务器发送请求，指示发送服务器的活跃性。 选择请求间隔大于服务器之间的网络往返时间。 所有服务器都等待超时间隔，该间隔是检查心跳的请求间隔的倍数。 一般来说，超时间隔>请求间隔>服务器之间的网络往返时间。
 
-```
+```asciiarmor
 在决定心跳间隔和超时值时，了解数据中心内和数据中心之间的网络往返时间很有用。
 [numbers-every-programmer-should-know 是一个很好的参考。http://highscalability.com/numbers-everyone-should-know
 ```
@@ -62,7 +62,7 @@ class SendingServer…
 
 class AbstractFailureDetector…
 
-```
+```java
   private HeartBeatScheduler heartbeatScheduler = new HeartBeatScheduler(this::heartBeatCheck, 100l);
 
   abstract void heartBeatCheck();

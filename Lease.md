@@ -22,7 +22,7 @@
 
 ​		当来自一致核心的节点成为领导者时，它开始跟踪租约。
 
-```tex
+```asciiarmor
 挂钟不是单调的
 计算机有两种不同的机制来表示时间。挂钟时间，代表一天中的时间，由通常用晶体振荡器构建的时钟机械测量。这种机制的已知问题是它可能会偏离一天中的实际时间，这取决于晶体振荡的快慢。为了解决这个问题，计算机通常具有 NTP 设置之类的服务，该服务使用 Internet 上众所周知的时间源检查一天中的时间并修复本地时间。因此，给定服务器中挂钟时间的两次连续读数可以使时间倒退。这使得挂钟时间不适合测量某些事件之间经过的时间。计算机有一种不同的机制，称为单调时钟，它指示经过的时间。单调时钟的值不受 NTP 等服务的影响。保证连续两次调用单调时钟可以得到经过的时间。因此，为了测量超时值，总是使用单调时钟。这在单个服务器上运行良好。但是无法比较两个不同服务器上的单调时钟。所有编程语言都有一个 api 来读取挂钟和单调时钟。例如在 Java 中 System.currentMillis 给出挂钟时间，而 System.nanoTime 给出单调时钟时间。
 ```
@@ -141,7 +141,7 @@ public class Lease implements Logging {
 
 class ReplicatedKVStore…
 
-```
+```java
 private ConcurrentHashMap<String, Lease> leases = new ConcurrentHashMap<>();
 @Override
 public CompletableFuture<Response> registerLease(String name, long ttl) {
@@ -163,7 +163,7 @@ private boolean leaseExists(String name) {
 
 class LeaderLeaseTracker…
 
-```
+```java
   private Map<String, Lease> leases;
   @Override
   public void addLease(String name, long ttl) throws DuplicateLeaseException {
@@ -183,7 +183,7 @@ class LeaderLeaseTracker…
 
 ​	负责租约的节点连接到领导者并在租约到期之前刷新租约。 正如 *HeartBeat* 中所讨论的，它需要考虑网络往返时间来决定“生存时间”值，并在租约到期之前发送刷新请求。 节点可以在“生存时间”时间间隔内多次发送刷新请求，以确保在出现任何问题时刷新租约。 但是节点还需要确保没有发送过多的刷新请求。 <u>**在大约一半的租用时间过去后发送请求是合理的**</u>。 这导致在租用时间内最多有两个刷新请求。 客户端节点使用自己的单调时钟跟踪时间。
 
-```
+```asciiarmor
 像任何心跳机制一样，这里假设服务器的单调时钟不快于客户端的单调时钟。 为了处理任何可能的速率差异，客户端需要保守并在超时间隔内向服务器发送多个心跳。
 
 例如，Zookeeper 默认会话超时时间为 10 秒，使用 1/3 的会话超时时间发送心跳。 Apache Kafka 在其新架构中使用 18 秒作为租约到期时间，每 3 秒发送一次心跳。
@@ -193,7 +193,7 @@ class LeaderLeaseTracker…
 
 class LeaderLeaseTracker…
 
-```
+```java
   @Override
   public void refreshLease(String name) {
       Lease lease = leases.get(name);
@@ -221,13 +221,13 @@ class LeaderLeaseTracker…
 
 ​		使用 Consistent Core 的集群节点通过网络调用创建租约，如下所示：
 
-```
+```java
 consistentCoreClient.registerLease("server1Lease", TimeUnit.SECONDS.toNanos(5));
 ```
 
 ​		然后，它可以将此租约附加到它存储在一致核心中的自我识别密钥。
 
-```
+```java
 consistentCoreClient.setValue("/servers/1", "{address:192.168.199.10, port:8000}", "server1Lease");
 ```
 
@@ -237,13 +237,13 @@ consistentCoreClient.setValue("/servers/1", "{address:192.168.199.10, port:8000}
 
 class ReplicatedKVStore…
 
-```
+```java
   private ConcurrentHashMap<String, Lease> leases = new ConcurrentHashMap<>();
 ```
 
 class ReplicatedKVStore…
 
-```
+```java
   private Response applySetValueCommand(Long walEntryId, SetValueCommand setValueCommand) {
       getLogger().info("Setting key value " + setValueCommand);
       if (setValueCommand.hasLease()) {
@@ -265,7 +265,7 @@ class ReplicatedKVStore…
 
 一旦租约到期，Consistent Core 也会从其键值存储中删除附加的键。
 
-```
+```java
 class LeaderLeaseTracker…
 
   public void expireLease(String name) {
@@ -293,7 +293,7 @@ class LeaderLeaseTracker…
 
 ​		新领导者刷新它知道的所有租约。 请注意，旧领导者上即将到期的租约会延长“生存时间”值。 这不是问题，因为它让客户端有机会重新连接新的领导者并继续租约。		
 
-```
+```java
 private void refreshLeases() {
     long now = clock.nanoTime();
     this.kvStore.getLeases().values().forEach(l -> {
