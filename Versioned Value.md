@@ -108,11 +108,11 @@ class MVCCStore…
 
 考虑一个示例，其中密钥的四个版本存储在版本号 1、2、3 和 5 处。根据客户端用于读取值的版本，返回最接近的匹配版本的密钥。
 
-![img](.\images\versioned-key-read.png)
+![img](images/versioned-key-read.png)
 
 将存储特定键值的版本返回给客户端。 然后客户端可以使用这个版本来读取值。 整体工作如下。
 
-![img](.\images\versioned-value-logical-clock-put.png)
+![img](images/versioned-value-logical-clock-put.png)
 
 *Figure 2: Put Request Handling*
 
@@ -120,7 +120,7 @@ class MVCCStore…
 
 
 
-![img](.\images\versioned-value-logical-clock-get.png)
+![img](images/versioned-value-logical-clock-get.png)
 
 ### 阅读多个版本
 
@@ -199,7 +199,7 @@ class IndexedMVCCStore…
 
 事务隔离级别，例如 [snapshot-isolation]，也可以自然地实现。 当客户端开始读取特定版本时，它保证每次从数据库读取时都获得相同的值，即使有并发的写入事务在多个读取请求之间提交不同的值也是如此。
 
-![img](.\images\snapshot-isolation.png)
+![img](images/snapshot-isolation.png)
 
 ### Using RocksDb like storage engines
 

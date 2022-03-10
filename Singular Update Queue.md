@@ -16,13 +16,13 @@
 
 实现一个工作队列，以及一个工作在这个队列上的单一线程。多个并发客户端可以将状态变化提交到这个队列中。但是，只有一个线程负责状态的改变。对于像 Golang 这样支持 goroutine 和通道（Channel）的语言，实现起来会比较自然。
 
-![img](.\images\SingularUpdateQueue.png)
+![img](images/SingularUpdateQueue.png)
 
 图1：工作队列支持的单一线程
 
 下面是一个典型的 Java 实现
 
-![img](.\images\SingularUpdateQueue-class-diagram.png)
+![img](images/SingularUpdateQueue-class-diagram.png)
 
 图2：Java 的 SingularUpdateQueue
 
@@ -97,7 +97,7 @@ class RequestWrapper…
 
 比如，一个服务器处理来自多个客户端的请求，更新预写日志，它就可以有一个下面这样的 SingularUpdateQueue：
 
-![img](.\images\WalRequestConsumer.png)
+![img](images/WalRequestConsumer.png)
 
 图3：更新预写日志的 SingularUpdateQueue
 

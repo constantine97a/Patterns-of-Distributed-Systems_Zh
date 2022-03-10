@@ -22,13 +22,13 @@
 
 ### 领导选举
 
-![img](.\images\election.png)
+![img](images/election.png)
 
 Figure 1: Election
 
-![img](D:\workspace\patterns-of-distributed-system-zh_CN\images\votes.png)
+![img](images/votes.png)
 
-![img](.\images\leader-heartbeat.png)
+![img](images/leader-heartbeat.png)
 
 
 
@@ -153,7 +153,7 @@ class ServerImpl…
   }
 ```
 
-![img](.\images\zookeeper-leader-election.png)
+![img](images/zookeeper-leader-election.png)
 
 像 etcd 或 Consul 这样的系统可以使用相同的方式来实现领导者选举。
 

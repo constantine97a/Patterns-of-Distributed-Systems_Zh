@@ -12,7 +12,7 @@
 
 ​		幸运的是，已经长期广泛使用的 [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) 机制已经提供了所有这些必要的特征。因此，我们只要确保追随者与其领导者之间都是通过单一的 Socket 通道进行通信，就可以进行我们所需的通信。然后，追随者再对来自领导者的更新进行序列化，将其送入[单一更新队列（Singular Update Queue）]()。
 
-![img](.\images\single-socket-channel.png)
+![img](images/single-socket-channel.png)
 
 ​	节点一旦打开连接，就不会关闭，持续从中读取新的请求。节点为每个连接准备一个专用的线程去读取写入请求。如果使用的是[非阻塞 IO](https://en.wikipedia.org/wiki/Non-blocking_I/O_(Java))，那就不需要为每个连接准备一个线程。
 

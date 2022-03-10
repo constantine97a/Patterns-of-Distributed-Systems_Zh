@@ -177,7 +177,7 @@ class LeaderLeaseTracker…
 
 
 
-![img](.\images\register-lease.png)
+![img](images/register-lease.png)
 
 *Figure 1: Register Lease*
 
@@ -203,11 +203,11 @@ class LeaderLeaseTracker…
 
 刷新请求只发送给 Consistent Core 的领导者，因为只有领导者负责决定租约何时到期。
 
-![img](.\images\refresh-lease.png)
+![img](images/refresh-lease.png)
 
 ​		当租约到期时，它会从领导者中移除。 将此信息提交给一致的核心也很重要。 所以领导者发送一个过期租约的请求，这个请求和 Consistent Core 中的其他请求一样处理。 一旦 High-Water Mark 达到提议的过期租约请求，它就会从所有追随者中删除。
 
-![img](.\images\expire-lease.png)
+![img](images/expire-lease.png)
 
 
 
@@ -302,13 +302,13 @@ private void refreshLeases() {
 }
 ```
 
-![img](.\images\lease-transfer-on-new-leader.png)
+![img](images/lease-transfer-on-new-leader.png)
 
 *Figure 4: Lease tracking on new leader*
 
 
 
-![img](.\images\refresh-on-new-leader.png)
+![img](images/refresh-on-new-leader.png)
 
 *Figure 5: Lease tracking on new leader*
 

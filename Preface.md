@@ -128,7 +128,7 @@ Lamport Clock 允许确定跨一组通信服务器的事件顺序。但它不允
 
 为了提供持久性保证，您可以使用 Write-Ahead Log 模式。使用分段日志将预写日志分为多个段。这有助于日志清理，由 Low-Water Mark 处理。通过在多个服务器上复制预写日志来提供容错。服务器之间的复制使用领导者和追随者模式进行管理，并且Quorum用于更新高水位标记以确定哪些值对客户端可见。通过使用单一更新队列，所有请求都按照严格的顺序进行处理。使用单套接字通道将请求从领导者发送到追随者时，顺序保持不变。为了优化单个套接字通道的吞吐量和延迟，可以使用请求管道。追随者通过从领导者那里收到的心跳知道领导者的可用性。如果leader因为网络分区而暂时与集群断开连接，则使用Generation Clock进行检测。如果所有请求仅由领导者提供服务，它可能会超载。当客户端是只读的并且允许读取过时的值时，它们可以由跟随服务器提供服务。跟随者读取允许处理来自跟随者服务器的读取请求。
 
-![image-20220301225631431](.\images\Pattern Sequence for implementing replicated log.png)
+![image-20220301225631431](images/Pattern Sequence for implementing replicated log.png)
 
 ### 原子提交
 
@@ -136,13 +136,13 @@ Lamport Clock 允许确定跨一组通信服务器的事件顺序。但它不允
 
 有时需要将跨一组分区的数据存储为一个原子操作。如果存储分区的进程崩溃或存在网络延迟或进程暂停，则可能会发生数据在几个分区上复制并在几个分区上失败的情况。为了保持原子性，需要在所有分区上存储数据并使其可访问或不访问。两阶段提交用于保证跨一组分区的原子性。为了保证原子性，两阶段提交通常需要锁定所涉及的数据项。这会严重影响吞吐量，尤其是在长时间运行的只读操作持有锁时。为了在不使用冲突锁的情况下获得更好的吞吐量，两阶段提交实现通常使用基于版本化值[Versioned Value]()的存储。
 
-![image-20220301230142140](.\images\atomic-commit.png)
+![image-20220301230142140](images/atomic-commit.png)
 
 ### Kubernetes or Kafka 控制面
 
 *Kubernetes* 或 *Kafka* 架构等产品是围绕高度一致的元数据存储构建的。 我们可以把它理解为一个模式序列。 *Consistent Core* 用作高度一致、容错的元数据存储。 *Lease* 用于实现集群节点的组成员关系和故障检测。 当任何集群节点发生故障或更新其元数据时，集群节点使用状态观察来获得通知一致的核心实现使用幂等接收器来忽略集群节点发送的重复请求，以防网络故障重试。 [*Consistent Core*](Consistent Core.md) 是使用“Replicated Wal”构建的，在上一节中将其描述为*模式序列*。
 
-![image-20220301230358309](.\images\kubernetes-kafka-control-panel.png)
+![image-20220301230358309](images/kubernetes-kafka-control-panel.png)
 
 
 
@@ -150,7 +150,7 @@ Lamport Clock 允许确定跨一组通信服务器的事件顺序。但它不允
 
 ​		各种类型的逻辑时间戳的使用也可以看作是一个模式序列。 各种产品使用 Gossip Dissemination 或 Consistent Core 来进行集群节点的组成员身份和故障检测。 数据存储使用版本化值来确定哪些值是最新的。 如果单个服务器负责更新值或使用 Leader 和 Followers，则可以在 Versioned Value 中使用 Lamport Clock 作为版本。 当需要从一天中的时间导出时间戳值时，使用混合时钟而不是简单的 Lamport 时钟。 如果允许多个服务器处理客户端请求以更新相同的值，则使用版本向量能够检测不同集群节点上的并发写入。
 
-![image-20220301230550654](.\images\logic-timestamp usage.png)
+![image-20220301230550654](images/logic-timestamp usage.png)
 
 这样，以一般形式理解问题及其反复出现的解决方案，有助于理解完整系统的构建块
 

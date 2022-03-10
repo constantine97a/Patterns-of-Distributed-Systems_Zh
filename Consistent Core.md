@@ -21,7 +21,7 @@
 
 ​	实施一个较小的 3 到 5 个节点集群，提供线性化保证和容错。 [1] 单独的数据集群可以使用小型一致集群来管理元数据，并使用 Lease 等原语做出集群范围的决策。 这样，数据集群可以增长到大量的服务器，但仍然可以使用较小的元数据集群来执行某些需要强一致性保证的操作。
 
-![img](.\images\ConsistentCore.png)
+![img](images/ConsistentCore.png)
 
 *Figure 1: Consistent Core*
 

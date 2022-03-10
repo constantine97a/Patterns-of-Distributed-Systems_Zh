@@ -99,9 +99,9 @@ Old leader (class ReplicatedLog...)
 
 ​	考虑以下示例。 在三服务器集群中，*leader1* 是现有的*leader*。 集群中所有服务器的世代为1。*Leader1*向*Follower*发送连续的心跳。 *Leader1* 有很长的垃圾收集暂停，比如 5 秒。 追随者没有得到心跳，超时选举新的领导者。 新的领导者将世代递增到 2。垃圾收集暂停结束后，领导者 1 继续向其他服务器发送请求。 位于第 2 代的追随者和新领导者拒绝请求并与第 2 代一起发送失败响应。领导者1 处理失败响应并降级成为追随者，并更新为第 2 代。
 
-![img](.\images\generation1.png)
+![img](images/generation1.png)
 
-![img](.\images\generation2.png)
+![img](images/generation2.png)
 
 ## 例子
 ### Raft

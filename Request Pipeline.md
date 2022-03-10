@@ -14,7 +14,7 @@
 
 ​		节点向其他节点发送请求，而无需等待先前请求的响应。 这是通过创建两个单独的线程来实现的，一个用于通过网络通道发送请求，另一个用于从网络通道接收响应。
 
-![img](.\images\single-socket-channel.png)
+![img](images/single-socket-channel.png)
 
 class SingleSocketChannel…
 

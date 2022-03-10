@@ -182,7 +182,7 @@ class VersionVector…
 
 ​		当客户端想要存储一个值时，它首先读取给定Key的最新已知版本。 然后它会根据密钥选择集群节点来存储值。 在存储值时，客户端传回已知版本。 请求流程如下图所示。 有两个服务器名为蓝色和绿色。 对于键“名称”，蓝色是主服务器。
 
-![img](.\images\versioned-vector-put.png)
+![img](images/versioned-vector-put.png)
 
 ​		在无领导复制方案中，客户端或协调器节点根据Key选择节点写入数据。 版本向量根据Key映射到的主集群节点进行更新。 在其他集群节点上复制具有相同版本向量的值以进行复制。 如果映射到Key的集群节点不可用，则选择下一个节点。 版本向量仅针对保存该值的第一个集群节点递增。 所有其他节点保存数据的副本。 在 [[voldemort]()] 等数据库中递增版本向量的代码如下所示：
 
@@ -239,7 +239,7 @@ public void put(String key, VersionedValue value) {
 
 ​		如下图所示，client1 和 client2 都在尝试写入键“name”。 如果 client1 无法写入绿色服务器，则绿色服务器将缺少 client1 写入的值。 当 client2 尝试写入，但无法连接到服务器 blue 时，它将写入服务器 green。 键“名称”的版本向量将反映服务器（蓝色和绿色）具有并发写入。
 
-![img](.\images\vector-clock-concurrent-updates.png)
+![img](images/vector-clock-concurrent-updates.png)
 
 ​		因此，当版本被认为是并发的时，基于版本向量的存储为任何Key保留多个版本。
 
@@ -380,7 +380,7 @@ class ClusterClient…
 
 ​		考虑下图中显示的场景。 两个节点，蓝色和绿色，具有键“名称”的值。 绿色节点具有版本向量 [blue: 1, green:1] 的最新版本。 当从副本（蓝色和绿色）中读取值时，它们会进行比较以找出哪个节点缺少最新版本，并将最新版本的放置请求发送到集群节点。
 
-![img](.\images\read-repair.png)
+![img](images/read-repair.png)
 
 *Figure 3: Read repair*
 
@@ -392,7 +392,7 @@ class ClusterClient…
 
 考虑以下场景。 当两个客户端尝试更新相同的密钥时，第二个客户端将收到异常，因为它在其 put 请求中传递的版本是过时的。
 
-![img](.\images\concurrent-update-with-server-versions.png)
+![img](images/concurrent-update-with-server-versions.png)
 
 像 [riak] 这样的数据库为客户端提供了灵活性，以允许此类并发写入并且不希望得到错误响应。
 
@@ -417,7 +417,7 @@ class ClusterClient…
 
 上面提到的场景给第二个客户端带来了错误，它的工作原理如下：
 
-![img](.\images\concurrent-update-with-client-versions.png)
+![img](images/concurrent-update-with-client-versions.png)
 
 
 

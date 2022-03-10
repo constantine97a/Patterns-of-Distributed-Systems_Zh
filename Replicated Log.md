@@ -41,7 +41,7 @@ Multi-Paxos 和 Raft 是最流行的实现复制日志的算法。 Multi-Paxos �
 
 ### Replicating client requests
 
-![img](.\images\raft-replication.png)
+![img](images/raft-replication.png)
 
 ​																									*Figure 1: Replication*
 
@@ -285,7 +285,7 @@ class ReplicatedLog…
 
 考虑有五个服务器：雅典（athens）、拜占庭（byzantium）、锡兰（cyrene）、德尔菲（delphi）和以弗所（ephesus）。以弗所是第一代的领导者。它已经把日志条目复制了其自身、德尔菲和雅典。
 
-![img](.\images\raft-lost-heartbeats.png)
+![img](images/raft-lost-heartbeats.png)
 
 ​																		*Figure 2: 失去心跳触发选举*
 
@@ -295,7 +295,7 @@ class ReplicatedLog…
 
 因为拜占庭（byzantium）无法获得多数的 3 票，所以，它就失去了选举权，回到追随者状态，如下图所示。
 
-![img](.\images\raft-election-timeout.png)
+![img](images/raft-election-timeout.png)
 
 ​																	*Figure 3: 日志不是最新的失去选举*
 
@@ -313,7 +313,7 @@ class ReplicatedLog…
 
 如果以弗所（ephesus）回来或是恢复了网络连接，它会向锡兰（cyrene）发送请求。因为锡兰（cyrene）现在是第 3 代了，它会拒绝这个请求。以弗所（ephesus）会在拒绝应答中得到新的任期（term），下台成为一个追随者。
 
-![img](.\images\raft-leader-stepdown.png)
+![img](images/raft-leader-stepdown.png)
 
 ​																					Figure 7: 领导下台
 

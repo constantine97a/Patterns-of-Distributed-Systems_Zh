@@ -16,7 +16,7 @@
 
 重要的是要注意，从追随者那里读取的客户可以获得旧值。 领导者和追随者之间总会存在复制滞后，即使在像 Raft 这样实现共识算法的系统中也是如此。 这是因为即使领导者知道提交了哪些值，它也需要另一条消息将其传达给追随者。 因此，从跟随服务器读取仅在允许稍旧值的情况下使用。
 
-![img](.\images\follower-reads.png)
+![img](images/follower-reads.png)
 
 Figure 1: Reading from the nearest follower
 
@@ -168,7 +168,7 @@ class ClusterClient…
 
 ​		考虑一个客户，他注意到某些图书数据错误地具有“标题”：“Nitroservices”。 它通过写入“title”：“microservice”来纠正这一点，该标题将发送给领导者。 然后它会立即读回该值，但读取请求会发送给可能尚未更新的追随者。
 
-![img](.\images\follower-reads-stale-data.png)
+![img](images/follower-reads-stale-data.png)
 
 ​		这可能是一个常见问题。例如，直到最近 Amazon S3 才解决掉这一点 [untill very recently](https://aws.amazon.com/about-aws/whats-new/2020/12/amazon-s3-now-delivers-strong-read-after-write-consistency-automatically-for-all-applications/)。
 
@@ -176,7 +176,7 @@ class ClusterClient…
 
 ​	请求流程如下所示： 为了纠正错误写入的值，“title”：“Microservices”被写入领导者。领导者在响应中向客户端返回版本 2。当客户端尝试读取“title”的值时，它会在请求中传递版本号 2。接收请求的跟随服务器检查自己的版本号是否是最新的。因为从服务器上的版本号仍然是 1，所以它一直等到它从领导者那里得到那个版本。一旦它拥有匹配的（或更高版本）版本，它就会完成读取请求，并返回值“Microservices”。
 
-![img](.\images\versioned-key-read-your-writes.png)
+![img](images/versioned-key-read-your-writes.png)
 
 
 

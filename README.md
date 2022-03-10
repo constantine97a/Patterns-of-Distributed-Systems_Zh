@@ -2,4 +2,4 @@
 
 
 
-![img](.\images\card.png)
+![img](images/card.png)

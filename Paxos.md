@@ -44,7 +44,7 @@ Paxos 是一个难以理解的协议。 我们将首先展示一个典型的协�
 
 
 
-![img](.\images\mfpaxos-initial-requests.png)
+![img](images/mfpaxos-initial-requests.png)
 
 考虑一个由五个节点组成的集群：Athens、Byzantium、Cyrene、Delphi 和 Ephesus。 客户端联系Athens节点，请求将名称设置为“alice”。 Athens节点现在需要发起一个 Paxos 交互来查看是否所有节点都同意这个改变。 雅典被称为提议者，因为雅典将向所有其他节点提议集群的名称为“alice”。 集群中的所有节点（包括Athens）都是“接受者”，这意味着它们能够接受提案。
 
@@ -54,7 +54,7 @@ Paxos 是一个难以理解的协议。 我们将首先展示一个典型的协�
 
 
 
-![img](.\images\mfpaxos-initial-prepare.png)
+![img](images/mfpaxos-initial-prepare.png)
 
 在准备阶段，提议者首先发送一些准备请求，这些请求都包含一个Generation数。 由于 *Paxos* 旨在避免单点故障，因此我们不会从单一的Generation Clock中获取Generation数。 相反，每个节点都维护自己的Generation Clock中，其中将生成编号与节点 ID 组合在一起。 节点 ID 用于打破平局，因此 [2,a] > [1,e] > [1,a]。 每个接受者都记录它迄今为止看到的最新承诺。
 
@@ -67,7 +67,7 @@ Paxos 是一个难以理解的协议。 我们将首先展示一个典型的协�
 
 由于在此之前他们没有看到任何请求，因此他们都向调用提议者返回了一个承诺。 我们将返回的值称为“承诺”，因为它表明接受者承诺不考虑任何具有比承诺的更早Generation Clock的消息。
 
-![img](.\images\mfpaxos-a-prepare-c.png)
+![img](images/mfpaxos-a-prepare-c.png)
 
 *Athens* 将其准备信息发送给*Cyrene*。 当它收到一个承诺作为回报时，这意味着它现在已经从五个节点中的三个节点获得了承诺，这代表了一个法定人数。 *Athens*现在从发送准备消息转变为发送接受消息。
 
@@ -82,7 +82,7 @@ Paxos 是一个难以理解的协议。 我们将首先展示一个典型的协�
 
 
 
-![img](.\images\mfpaxos-accept-ac.png)
+![img](images/mfpaxos-accept-ac.png)
 
 Athens现在开始发送accept 消息，其中包含generation和proposed value，*Athens*和*Byzantium*接受了这个提议。
 
@@ -95,11 +95,11 @@ Athens现在开始发送accept 消息，其中包含generation和proposed value�
 
 
 
-![img](.\images\mfpaxos-e-prepare-c.png)
+![img](images/mfpaxos-e-prepare-c.png)
 
 *Ephesus* 现在向 *Cyrene* 发送一条准备消息。 Cyrene曾向雅典发出过承诺，但以弗所的要求更高一辈，所以优先。 昔兰尼向以弗所发回了一个承诺。
 
-![img](.\images\mfpaxos-c-refuses-a.png)
+![img](images/mfpaxos-c-refuses-a.png)
 
 Cyrene 现在收到了来自Athens 的accept 请求，但Cyrene 拒绝了它，因为generation 数落后于其对Ephesus的承诺。
 
@@ -112,7 +112,7 @@ Cyrene 现在收到了来自Athens 的accept 请求，但Cyrene 拒绝了它，�
 
 
 
-![img](.\images\mfpaxos-e-send-accepts.png)
+![img](images/mfpaxos-e-send-accepts.png)
 
 Ephesus 现在已经从它的准备消息中获得了一个法定人数，所以可以继续发送接受。 它向自己和 Delphi 发送accepts ，如上图所示，但在它可以发送更多accepts之前崩溃 ，当前系统状态如下表。
 
@@ -131,7 +131,7 @@ Ephesus 现在已经从它的准备消息中获得了一个法定人数，所以
 
 在一个简单的两阶段提交的情况下，我们会期望 Ephesus 继续并选择它的值，但是由于 Ephesus 已经崩溃，这样的方案现在会遇到麻烦。 如果它锁定了法定人数的接受者，它的崩溃将使整个提案过程陷入僵局。 然而，Paxos 预计这种事情会发生，因此Athens将再次尝试，这次是与更高的一代，如下图所示。
 
-![img](.\images\mfpaxos-a-2nd-prep.png)
+![img](images/mfpaxos-a-2nd-prep.png)
 
 如上图所示，它再次发送prepare 消息，但这次使用更高的*generation*。 与第一轮一样，它返回了三个承诺，但有一个重要的区别。 Athens早已经接受了“alice”，而Delphi已经接受了“elanor”。 这两个接受者都返回一个承诺，还有他们已经接受的值，以及接受的提议的代号。 当他们返回该值时，他们将他们承诺的一代更新为 [2,a] 以反映他们对雅典做出的承诺。
 
@@ -142,7 +142,7 @@ Ephesus 现在已经从它的准备消息中获得了一个法定人数，所以
 
 具有法定人数的*Athens*现在必须进入接受阶段，但它必须提出已经被接受的、最高的*Generation*的值，即“elanor”，他被Delphi以[1，e]的一代接受，这 大于Athens对 [1,a] 的“爱丽丝”的接受度。如下图所示。
 
-![img](.\images\mfpaxos-a-2nd-accept.png)
+![img](images/mfpaxos-a-2nd-accept.png)
 
 *Athens*开始发出接受请求，但现在是“*elanor*”及其当前一代。 Athens向自己发送一个接受请求，该请求被接受。 这是一个至关重要的接受，因为现在有三个节点接受“elanor”，这是“elanor”的法定人数，因此我们可以认为“elanor”是选择的值。
 
@@ -155,7 +155,7 @@ Ephesus 现在已经从它的准备消息中获得了一个法定人数，所以
 
 此时Athens和Ephesus 现已崩溃。 但是集群仍然有一定数量的节点在运行，所以它们应该能够继续工作，并且实际上通过遵循协议，他们可以发现“elanor”是选择的值。
 
-![img](.\images\mfpaxos-c-prepare.png)
+![img](images/mfpaxos-c-prepare.png)
 
 Cyrene 收到将名称设置为“carol”的请求，因此它成为提议者。 它已经看到了第 [2,a] 代，因此它开始了第 [3,c] 代的准备阶段。 虽然它希望提出“carol”作为名称，但目前它只是发出准备请求。
 
@@ -166,11 +166,11 @@ Cyrene 将准备消息发送到集群中的其余节点。 与Athens早期的准
 | promised generation | 2,a    | 3,c       | 3,c    | 3,c    | 1,e     |
 | accepted value      | elanor | alice     | none   | elanor | elanor  |
 
-![img](.\images\mfpaxos-c-accept.png)
+![img](images/mfpaxos-c-accept.png)
 
 虽然我可以继续崩溃并唤醒节点，但现在很明显“elanor”将胜出。 只要达到法定人数的节点，其中至少有一个将具有“elanor”作为其值，并且任何尝试准备的节点都必须联系一个接受“elanor”的节点以获得的法定人数。 因此，我们将以 Cyrene 发送提交来结束。如下图所示。
 
-![img](.\images\mfpaxos-c-commit.png)
+![img](images/mfpaxos-c-commit.png)
 
 在某个时候，Athens和Ephesus会重新上线，他们会发现quorum选择了什么。
 
